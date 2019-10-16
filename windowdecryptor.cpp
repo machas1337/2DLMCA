@@ -22,6 +22,10 @@ WindowDecryptor::WindowDecryptor(QStringList images, IMAGETYPE type) :
     this->images = images;
     this->type = type;
     clicked_decrypting = 0;
+    for(QString xx : images)
+    {
+        qDebug()<<xx;
+    }
 }
 
 void WindowDecryptor::on_pushButton_clicked()

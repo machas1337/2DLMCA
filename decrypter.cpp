@@ -20,13 +20,18 @@ Decrypter::Decrypter(QList<QImage> images, int *rulenum, int rulenum_size, IMAGE
     s= images.first().size().rheight();
     m = images.size();
     k = images.size();
-    for(int i=images.size()-1; i >= 0; i--)
-        C.append(convertToMatrix(images[i]));    
+    //for(int i=images.size()-1; i >= 0; i--)
+    //    C.append(convertToMatrix(images[i]));
+    for(QImage xx : images)
+    {
+        C.append(convertToMatrix(xx));
+    }
+
     c= int(pow(2.0, b));
     iteration = 0;
     //dasdadasd
 
-    //qDebug()<<"!________________!_ C.SIZE: "<<C.size()<<" rulenum_size:"<<this->rulenum_size;
+    qDebug()<<"!________________!_ C.SIZE: "<<C.size()<<" rulenum_size:"<<this->rulenum_size;
 }
 
 Matrix** Decrypter::convertToMatrix(QImage image)
@@ -97,7 +102,7 @@ QImage Decrypter::decrypt()
     qDebug()<<"--------------";
 
     //QImage output = convertToQImage(Cnext);
-    output = convertToQImage(Cnext);
+    output = convertToQImage(C.last());
     //qDebug()<<"[1][1]: "<<C.last()[1][1].status;
     //qDebug()<<"[1][2]: "<<C.last()[1][2].status;
     //qDebug()<<"[0][0]: "<<C.last()[0][0].status;

@@ -120,7 +120,8 @@ void Encrypter::encrypt(int k, IMAGETYPE typeTMP)
         // 1 <= rulenum[i] <= 511
         //qsrand(qrand());
         //rulenum[i]= (2 * std::rand()%255) + 1;//(2 * qrand()%255) + 1;
-        rulenum[i]= QRandomGenerator::global()->bounded(511);
+        rulenum[i]= QRandomGenerator::global()->bounded(1,511);
+        rulenum[i]= 17;
     }
     rulenum_count= 0;
     
@@ -131,7 +132,7 @@ void Encrypter::encrypt(int k, IMAGETYPE typeTMP)
     initCtresholds(k, c);
 
     //wygenerowanie szyfrogramów
-    for(int secret = 0; secret < n+m-k; secret++)
+    for(int secret = C.size(); secret <= n+m-1; secret++)
     {
         Cnext = newMatrix();
 
@@ -144,7 +145,7 @@ void Encrypter::encrypt(int k, IMAGETYPE typeTMP)
         }
         C.append(Cnext);
         t++;
-        qDebug()<<"--------------";
+        //qDebug()<<"--------------";
     }
 
     saveCImages();
@@ -155,6 +156,7 @@ int Encrypter::transition(int i, int j)
     int a = 0;
     //QList<std::pair<int,int>> V = getLocals(i,j);
     QList<LOCAL> V = getLocalss(i, j);
+    //qDebug()<<"i:"<<i<<"j"<<j;
 
     a = C.at(C.size()-k)[i][j].status;
     //qDebug()<<"first a: "<<a;
@@ -186,7 +188,7 @@ int Encrypter::transition(int i, int j)
 
 int Encrypter::localTransition(int rulenum, QList<LOCAL> V, Matrix** Ctime)
 {
-    int binary_rulenum[10];
+    int binary_rulenum[9] = {0};
     int binary_size;
     int decimal = 0;
     int _rulenum = rulenum;
@@ -201,15 +203,15 @@ int Encrypter::localTransition(int rulenum, QList<LOCAL> V, Matrix** Ctime)
         binary_rulenum[binary_size]=_rulenum%2;
         _rulenum = _rulenum/2;
     }
+
     for(binary_size = binary_size - 1; binary_size >= 0; binary_size--)
-    //for( ; binary_size >= 0; binary_size--)
     {
+
         if(binary_rulenum[binary_size]==1)
         {
             decimal = int(pow(2.0, binary_size));
-            //qDebug()<<"decimal "<<decimal<<"rulenum "<<rulenum<<"V[binart_size].value"<<V[binary_size].value;
+            //qDebug()<<"decimal "<<decimal<<"rulenum "<<rulenum<<"V[binart_size].value"<<V[binary_size].value<<"position: "<<V[binary_size].i<<V[binary_size].j;
             if(decimal <= rulenum && V[binary_size].value == 1)
-            //if(V[binary_size].value == 1)
             {
                 temp.i = V[binary_size].i;
                 temp.j = V[binary_size].j;
