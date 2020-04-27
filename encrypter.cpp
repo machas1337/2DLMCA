@@ -121,7 +121,7 @@ void Encrypter::encrypt(int k, IMAGETYPE typeTMP)
         //qsrand(qrand());
         //rulenum[i]= (2 * std::rand()%255) + 1;//(2 * qrand()%255) + 1;
         rulenum[i]= QRandomGenerator::global()->bounded(1,511);
-        rulenum[i]= 17;
+        rulenum[i]= 100;
     }
     rulenum_count= 0;
     
@@ -136,9 +136,9 @@ void Encrypter::encrypt(int k, IMAGETYPE typeTMP)
     {
         Cnext = newMatrix();
 
-        for(int i = 0; i<r; i++)
+        for(int i = 0; i<r ; i++)
         {
-            for(int j = 0; j<s; j++)
+            for(int j = 0; j<s ; j++)
             {
                 Cnext[i][j].status = transition(i,j);
             }
@@ -211,7 +211,8 @@ int Encrypter::localTransition(int rulenum, QList<LOCAL> V, Matrix** Ctime)
         {
             decimal = int(pow(2.0, binary_size));
             //qDebug()<<"decimal "<<decimal<<"rulenum "<<rulenum<<"V[binart_size].value"<<V[binary_size].value<<"position: "<<V[binary_size].i<<V[binary_size].j;
-            if(decimal <= rulenum && V[binary_size].value == 1)
+            //if(decimal <= rulenum && V[binary_size].value == 1)
+            if(decimal <= rulenum)
             {
                 temp.i = V[binary_size].i;
                 temp.j = V[binary_size].j;
@@ -225,7 +226,10 @@ int Encrypter::localTransition(int rulenum, QList<LOCAL> V, Matrix** Ctime)
     {
         _i = output[x].i;
         _j = output[x].j;
-        sum += Ctime[_i][_j].status;
+        if(_i < 0 || _i >= r || _j < 0 || _j >= s)
+            sum += 255;
+        else
+            sum += Ctime[_i][_j].status;
         //qDebug()<<"_i"<<_i<<"_j"<<_j<<"sum"<<sum;
     }
     //qDebug()<<"total sum: "<<sum;

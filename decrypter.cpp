@@ -20,13 +20,13 @@ Decrypter::Decrypter(QList<QImage> images, int *rulenum, int rulenum_size, IMAGE
     s= images.first().size().rheight();
     m = images.size();
     k = images.size();
-    //for(int i=images.size()-1; i >= 0; i--)
-    //    C.append(convertToMatrix(images[i]));
-    for(QImage xx : images)
+    for(int i=images.size()-1; i >= 0; i--)
+        C.append(convertToMatrix(images[i]));
+    /*for(QImage xx : images)
     {
         C.append(convertToMatrix(xx));
     }
-
+*/
     c= int(pow(2.0, b));
     iteration = 0;
     //dasdadasd
@@ -78,9 +78,9 @@ QImage Decrypter::decrypt()
     //{
     Cnext = newMatrix();
 
-    for(int i = 0; i<r; i++)
+    for(int i = 0; i<r ; i++)
     {
-        for(int j = 0; j<s; j++)
+        for(int j = 0; j < s ; j++)
         {
             Cnext[i][j].status = inverseTransition(i, j);
         }
