@@ -21,6 +21,7 @@ Decrypter::Decrypter(QList<QImage> images, int *rulenum, int rulenum_size, IMAGE
     m = images.size();
     k = images.size();
     for(int i=images.size()-1; i >= 0; i--)
+    //for(int i = 0; i < images.size(); i++)
         C.append(convertToMatrix(images[i]));
     /*for(QImage xx : images)
     {
@@ -32,6 +33,7 @@ Decrypter::Decrypter(QList<QImage> images, int *rulenum, int rulenum_size, IMAGE
     //dasdadasd
 
     qDebug()<<"!________________!_ C.SIZE: "<<C.size()<<" rulenum_size:"<<this->rulenum_size;
+
 }
 
 Matrix** Decrypter::convertToMatrix(QImage image)
@@ -73,16 +75,26 @@ QImage Decrypter::convertToQImage(Matrix **image)
 
 QImage Decrypter::decrypt()
 {
+
     QImage output;
-   // do
-    //{
+    //do{
+    this->bad_pixels = 0;
     Cnext = newMatrix();
 
     for(int i = 0; i<r ; i++)
     {
         for(int j = 0; j < s ; j++)
         {
-            Cnext[i][j].status = inverseTransition(i, j);
+            int outt = inverseTransition(i,j);
+            Cnext[i][j].status = outt;
+            if(outt < 0)
+                this->bad_pixels++;
+
+            //if (i == 0 && j == 0)
+            //{
+            //qDebug()<<"[i: "<<i<<"] [j: "<<j<<"] = "<<outt;
+            //}
+            //Cnext[i][j].status = inverseTransition(i, j);
         }
     }
     /*
@@ -100,6 +112,7 @@ QImage Decrypter::decrypt()
     iteration++;
     //qDebug()<<"!________________!_ C.SIZE: "<<C.size();
     qDebug()<<"--------------";
+    qDebug()<<"W tej iteracji było "<<this->bad_pixels<<" bad pixels";
 
     //QImage output = convertToQImage(Cnext);
     output = convertToQImage(C.last());
@@ -107,7 +120,7 @@ QImage Decrypter::decrypt()
     //qDebug()<<"[1][2]: "<<C.last()[1][2].status;
     //qDebug()<<"[0][0]: "<<C.last()[0][0].status;
     //}while(C.last()[1][1].status != 0 || C.last()[1][2].status != 63 || C.last()[0][0].status != 255);
-
+    //}while(this->bad_pixels != 0 && iteration <= 1000);
     return output;
 }
 
@@ -139,6 +152,11 @@ int Decrypter::inverseTransition(int i, int j)
         if(rulenum_count == rulenum_size-1) { rulenum_count = 0; }
         else { rulenum_count++; }
 
+        if(i == 0 && j == 0)
+        {
+            qDebug()<<"iteracja x: "<<x<<"  negative sum = "<<negative_sum<<rulenum[rulenum_count]<<" current 'a': "<<a<<" w iteracji: "<<iteration<<" ruenum size: "<<rulenum_size;
+        }
+
     }
 //*/
 /*
@@ -153,11 +171,12 @@ int Decrypter::inverseTransition(int i, int j)
     a += negative_sum;
     //qDebug()<<"..... NEGATIVE: "<<negative_sum<<"  ++++iteracja x size: "<<k-1;
     //qDebug()<<"..... A SUME: "<<a;
-    a = a % c;
+    a = (c+(a % c))%c;
     //qDebug()<<a<<"%"<<c<<"="<<a%c;
-    //qDebug()<<negative_sum<<"%"<<c<<"="<<negative_sum%c;
-    return a;
+    if(i == 0 && j == 0)
+        qDebug()<<"a == : "<<a;
 
+    return a;
 }
 
 int Decrypter::inverseTransitionFunction(int rulenum, QList<std::pair<int,int>> V)

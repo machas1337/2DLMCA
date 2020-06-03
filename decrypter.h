@@ -17,7 +17,8 @@ class Decrypter : public Encrypter
 public:
     QList<QImage> images; //lista szyfrogramów
     int rulenum_size; //liczba podanych liczb rządzących
-    int iteration;
+    int iteration;  //licznik iteracji
+    int bad_pixels; //helper 2 delete
 
     Decrypter();
     Decrypter(QList<QImage> images, int *rulenum, int rulenum_size, IMAGETYPE type);

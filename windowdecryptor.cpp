@@ -59,6 +59,7 @@ void WindowDecryptor::on_pushButtonDecode_clicked()
             if(items[i]->value() > 0)
                 rulenum_list.append(items[i]->value());
         }
+        std::reverse(rulenum_list.begin(), rulenum_list.end());
         rulenum = new int[rulenum_list.size()];
         for(int i = 0; i< rulenum_list.size(); i++)
         {

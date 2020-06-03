@@ -121,7 +121,11 @@ void Encrypter::encrypt(int k, IMAGETYPE typeTMP)
         //qsrand(qrand());
         //rulenum[i]= (2 * std::rand()%255) + 1;//(2 * qrand()%255) + 1;
         rulenum[i]= QRandomGenerator::global()->bounded(1,511);
-        rulenum[i]= 100;
+        //if(i==0)
+        //    rulenum[i]= 511;
+        //else {
+        //    rulenum[i]= 511;
+        //}
     }
     rulenum_count= 0;
     
@@ -167,7 +171,6 @@ int Encrypter::transition(int i, int j)
         //qDebug()<<"rulenum"<<rulenum[rulenum_count]<<"Cpos"<<x<<"Csize"<<C.size()<<"k"<<k;
         if(rulenum_count == k - 2) { rulenum_count = 0; }
         else { rulenum_count++; }
-
     }
     //qDebug()<<"sum a: "<<a;
     //rulenum_count = 0;
@@ -181,7 +184,7 @@ int Encrypter::transition(int i, int j)
     }
     */
     //qDebug()<<a<<"%"<<c<<"="<<a%c;
-    a = a % c;
+    a = (c+(a % c))%c;
 
     return a;
 }
@@ -197,41 +200,54 @@ int Encrypter::localTransition(int rulenum, QList<LOCAL> V, Matrix** Ctime)
 
     std::reverse(V.begin(), V.end());
 
+    std::string stringput = "";
     //przekształcenie wartości reguły na postać binarną
     for(binary_size = 0; _rulenum > 0; binary_size++)
     {
         binary_rulenum[binary_size]=_rulenum%2;
         _rulenum = _rulenum/2;
+
     }
 
     for(binary_size = binary_size - 1; binary_size >= 0; binary_size--)
     {
+        stringput += std::to_string(binary_rulenum[binary_size]);
+        //qDebug()<<"BINARY VERSION: "<<QString::fromStdString(stringput);
 
         if(binary_rulenum[binary_size]==1)
         {
             decimal = int(pow(2.0, binary_size));
-            //qDebug()<<"decimal "<<decimal<<"rulenum "<<rulenum<<"V[binart_size].value"<<V[binary_size].value<<"position: "<<V[binary_size].i<<V[binary_size].j;
+            //qDebug()<<"decimal "<<decimal<<"rulenum "<<rulenum<<"V[binart_size].value"<<V[binary_size].value<<"position: "<<V[binary_size].i<<"  "<<V[binary_size].j;
             //if(decimal <= rulenum && V[binary_size].value == 1)
             if(decimal <= rulenum)
             {
                 temp.i = V[binary_size].i;
                 temp.j = V[binary_size].j;
+                temp.value = V[binary_size].value;
+                //qDebug()<<"DODAŁEM: "<<temp.i<<" "<<temp.j<<" z val: "<<temp.value;
                 output.append(temp);
             }
         }
+        //qDebug()<<"END";
     }
 
     int sum = 0, _i, _j;
+
+
     for(int x = 0; x < output.size(); x++)
     {
         _i = output[x].i;
         _j = output[x].j;
+        /*
         if(_i < 0 || _i >= r || _j < 0 || _j >= s)
-            sum += 255;
+            sum += 0;
         else
             sum += Ctime[_i][_j].status;
-        //qDebug()<<"_i"<<_i<<"_j"<<_j<<"sum"<<sum;
+            */
+        sum += Ctime[(r+(_i%r))%r][(s+(_j%s))%s].status;
+
     }
+    //qDebug()<<"Ile razy?: "<<kk<<rulenum<<output.size();
     //qDebug()<<"total sum: "<<sum;
     return sum;
 }
