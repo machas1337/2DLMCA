@@ -37,21 +37,28 @@ public:
     int *rulenum;//tablica liczb rządzących
     int rulenum_count;
     IMAGETYPE type;
+
     Encrypter();
     Encrypter(int k, int m, int n);
     ~Encrypter();
+
     void loadFile(QImage img); //ładuje plik obrazu
     void kindOfImage(IMAGETYPE type); //rozpoznaje rodzja obrazu: czarno-biały, szary, kolorowy
     void encrypt(int k, IMAGETYPE type); //główny kod procesu kodowania
-    int transition(int i, int j); //wykonanie przekształcenia
+
+    int transitionGrey(int i, int j); //wykonanie przekształcenia
+    Matrix transitionColor(int i, int j); //wykonanie przekształcenia dla obrazów kolorowych
+
     int localTransition(int rulenum, QList<LOCAL> V, Matrix** Ctime); //lokalna funkcja przekształcenia
-    int transitionFunction(int rulenum, QList<LOCAL> V, Matrix** Ctime); //funkcja przekształcająca
+    Matrix localTransitionColor(int rulenum, QList<LOCAL> V, Matrix** Ctime);
+
     void createMBandW(); //utwrzoenie M tablicy dla obrazów czarno białych
     void createMGrey(); //utwozenie M tablicy dla obrazów szarych
     void createMColor(); //utworzenie M tablicy dla obrazów kolorwych
+
     void initCtresholds(int k, int c); //inicjalizacja k-1 konfiguracyjnych macierzy
-    QList<std::pair<int,int>> getLocals(int i, int j); //funkcja zwraca sąsiadów punktu <i,j> wg. definicji Moor'a
-    QList<LOCAL> getLocalss(int i, int j);
+
+    QList<LOCAL> getLocals(int i, int j); //funkcja zwraca sąsiadów punktu <i,j> wg. definicji Moor'a
 
     void saveCImages();
     Matrix** newMatrix();

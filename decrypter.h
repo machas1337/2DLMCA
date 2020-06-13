@@ -18,13 +18,14 @@ public:
     QList<QImage> images; //lista szyfrogramów
     int rulenum_size; //liczba podanych liczb rządzących
     int iteration;  //licznik iteracji
-    int bad_pixels; //helper 2 delete
 
     Decrypter();
     Decrypter(QList<QImage> images, int *rulenum, int rulenum_size, IMAGETYPE type);
+
     QImage decrypt();//główna funkcja deszyfrująca
     int inverseTransition(int i, int j); //funkcja obecnego stanu inwersji
-    int inverseTransitionFunction(int rulenum, QList<std::pair<int,int>> V); //funkcja przekształcająca
+    Matrix inverseTransitionColor(int i, int j); //funkcja obecnego stanu inwersji
+
     Matrix** convertToMatrix(QImage image);
     QImage convertToQImage(Matrix **image);
 };

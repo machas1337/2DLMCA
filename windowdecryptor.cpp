@@ -31,7 +31,7 @@ WindowDecryptor::WindowDecryptor(QStringList images, IMAGETYPE type) :
 void WindowDecryptor::on_pushButton_clicked()
 {
     QSpinBox *spinbox = new QSpinBox;
-    spinbox->setMaximum(512);
+    spinbox->setMaximum(511);
     spinbox->setParent(this);
     spinbox->setObjectName(tr("rulenum%1").arg(ui->gridLayout_2->count()));
     ui->gridLayout_2->addWidget(spinbox);

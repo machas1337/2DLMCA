@@ -56,9 +56,9 @@ void Encrypter::createMBandW()
         for(int j= 0; j<s; j++)
         {
            if(image.pixel(i,j)== qRgb(0,0,0))
-               M[i][j].status= 1;
+               M[i][j].red = 1;
            else
-               M[i][j].status= 0;
+               M[i][j].red = 0;
         }
     }
 }
@@ -71,8 +71,7 @@ void Encrypter::createMGrey()
         for(int j= 0; j<s; j++)
         {
             tmp.setRgb(image.pixel(i,j));
-            if(tmp.red() < 256) M[i][j].status= tmp.red();
-            else M[i][j].status= 255;
+            M[i][j].red = tmp.red();
         }
     }
 }
@@ -84,8 +83,13 @@ void Encrypter::createMColor()
     {
         for(int j= 0; j<s; j++)
         {
-           tmp = M[i][j].fromRgb(image.pixel(i,j));
-           M[i][j].status= tmp.red()+tmp.blue()+tmp.green();
+           //tmp = M[i][j].fromRgb(image.pixel(i,j));
+           tmp.setRgb(image.pixel(i,j));
+           M[i][j].red = tmp.red();
+           M[i][j].green = tmp.green();
+           M[i][j].blue = tmp.blue();
+           if(i == 0 && j == 0)
+               qDebug()<<"output: "<<M[i][j].red<<M[i][j].green<<M[i][j].blue;
         }
     }
 
@@ -102,7 +106,7 @@ void Encrypter::kindOfImage(IMAGETYPE typee)
         createMBandW();
     }
     else{
-        b= 24;
+        b= 8; //8 bit to maksymalna reprezentacja barw w przestrzeni RGB
         createMColor();
     }
     type = typee;
@@ -117,15 +121,7 @@ void Encrypter::encrypt(int k, IMAGETYPE typeTMP)
     rulenum = new int[k]; //rulenum = &static_cast<int &>(k);
     for(int i= 0; i< k-1; i++)
     {
-        // 1 <= rulenum[i] <= 511
-        //qsrand(qrand());
-        //rulenum[i]= (2 * std::rand()%255) + 1;//(2 * qrand()%255) + 1;
         rulenum[i]= QRandomGenerator::global()->bounded(1,511);
-        //if(i==0)
-        //    rulenum[i]= 511;
-        //else {
-        //    rulenum[i]= 511;
-        //}
     }
     rulenum_count= 0;
     
@@ -144,150 +140,267 @@ void Encrypter::encrypt(int k, IMAGETYPE typeTMP)
         {
             for(int j = 0; j<s ; j++)
             {
-                Cnext[i][j].status = transition(i,j);
+                switch(type)
+                {
+                    case IMAGETYPE::BINARY:
+                    {
+                        break;
+                    }
+                    case IMAGETYPE::GREY:
+                    {
+                        Cnext[i][j].red = transitionGrey(i,j);
+                        break;
+                    }
+                    case IMAGETYPE::COLOR:
+                    {
+                        //int *result = transitionColor(i,j);
+                        //Matrix result = transitionColor(i,j);
+                        Cnext[i][j] = transitionColor(i,j);
+                        //Cnext[i][j].green = result.value.G;
+                        //Cnext[i][j].blue = result.value.B;
+                        break;
+                    }
+                }
             }
         }
         C.append(Cnext);
         t++;
-        //qDebug()<<"--------------";
     }
 
     saveCImages();
 }
 
-int Encrypter::transition(int i, int j)
+int Encrypter::transitionGrey(int i, int j)
 {
     int a = 0;
-    //QList<std::pair<int,int>> V = getLocals(i,j);
-    QList<LOCAL> V = getLocalss(i, j);
-    //qDebug()<<"i:"<<i<<"j"<<j;
+    QList<LOCAL> V = getLocals(i, j);
 
-    a = C.at(C.size()-k)[i][j].status;
-    //qDebug()<<"first a: "<<a;
+    a = C.at(C.size()-k)[i][j].red;
+
     for(int x = C.size()-k+1; x < C.size(); x++)
     {
-        //a += transitionFunction(rulenum[rulenum_count], V, C.at(x));
         a += localTransition(rulenum[rulenum_count], V, C.at(x));
-        //qDebug()<<"rulenum"<<rulenum[rulenum_count]<<"Cpos"<<x<<"Csize"<<C.size()<<"k"<<k;
-        if(rulenum_count == k - 2) { rulenum_count = 0; }
-        else { rulenum_count++; }
+        if(rulenum_count == k - 2){
+            rulenum_count = 0;
+        }
+        else{
+            rulenum_count++;
+        }
     }
-    //qDebug()<<"sum a: "<<a;
-    //rulenum_count = 0;
-    //if(rulenum_count >= k-1) { rulenum_count = 0; }
-    //a = transitionFunction(rulenum[rulenum_count], V);
-    //rulenum_count++;
-    /*
-    for(int cstat=0; cstat < C.size(); cstat++)
-    {
-        a += C.at(cstat)[i][j].status;
-    }
-    */
-    //qDebug()<<a<<"%"<<c<<"="<<a%c;
+
     a = (c+(a % c))%c;
 
     return a;
 }
+/*
+int* Encrypter::transitionColor(int i, int j)
+{
+    int *a = new int[3];
+    std::fill_n(a, 3, 0);
+
+    int *current_tmp;
+    QList<LOCAL> V = getLocals(i, j);
+
+    a[0] = C.at(C.size()-k)[i][j].value.R;
+    a[1] = C.at(C.size()-k)[j][j].value.G;
+    a[2] = C.at(C.size()-k)[j][j].value.B;
+
+    for(int x = C.size()-k+1; x < C.size(); x++)
+    {
+        current_tmp = localTransitionColor(rulenum[rulenum_count], V, C.at(x));
+        a[0] += current_tmp[0];
+        a[1] += current_tmp[1];
+        a[2] += current_tmp[2];
+        if(rulenum_count == k - 2){
+            rulenum_count = 0;
+        }
+        else{
+            rulenum_count++;
+        }
+    }
+
+    a[0] = (c+(a[0] % c))%c;
+    a[1] = (c+(a[1] % c))%c;
+    a[2] = (c+(a[2] % c))%c;
+
+    return a;
+}
+*/
+
+Matrix Encrypter::transitionColor(int i, int j)
+{
+    Matrix a;
+    QList<LOCAL> V = getLocals(i, j);
+
+    a = C.at(C.size()-k)[i][j];
+
+    for(int x = C.size()-k+1; x < C.size(); x++)
+    {
+        a += localTransitionColor(rulenum[rulenum_count], V, C.at(x));
+        if(rulenum_count == k - 2){
+            rulenum_count = 0;
+        }else{
+            rulenum_count++;
+        }
+    }
+
+    a.red = (c+(a.red % c))%c;
+    a.green = (c+(a.green % c))%c;
+    a.blue = (c+(a.blue % c))%c;
+
+    return a;
+}
+
 
 int Encrypter::localTransition(int rulenum, QList<LOCAL> V, Matrix** Ctime)
 {
-    int binary_rulenum[9] = {0};
-    int binary_size;
-    int decimal = 0;
-    int _rulenum = rulenum;
-    QList<LOCAL> output;
-    LOCAL temp;
+    int binary_rulenum[9] = {0}; //binarna postać liczby rządzącej
+    int binary_size;    //wielkość
+    int decimal = 0;    //zmienna pomocnicza
+    int _rulenum = rulenum; //zmienna pomocnicza
+    QList<LOCAL> output; //zwracana lista pixeli sąsiadujących
+    LOCAL temp; //zmienna pomocnicza
 
     std::reverse(V.begin(), V.end());
 
-    std::string stringput = "";
     //przekształcenie wartości reguły na postać binarną
     for(binary_size = 0; _rulenum > 0; binary_size++)
     {
         binary_rulenum[binary_size]=_rulenum%2;
         _rulenum = _rulenum/2;
-
     }
 
+    //pętla sprawdzająca poszczególne wartości kolejnych bitów
     for(binary_size = binary_size - 1; binary_size >= 0; binary_size--)
     {
-        stringput += std::to_string(binary_rulenum[binary_size]);
-        //qDebug()<<"BINARY VERSION: "<<QString::fromStdString(stringput);
-
         if(binary_rulenum[binary_size]==1)
         {
             decimal = int(pow(2.0, binary_size));
-            //qDebug()<<"decimal "<<decimal<<"rulenum "<<rulenum<<"V[binart_size].value"<<V[binary_size].value<<"position: "<<V[binary_size].i<<"  "<<V[binary_size].j;
-            //if(decimal <= rulenum && V[binary_size].value == 1)
             if(decimal <= rulenum)
             {
                 temp.i = V[binary_size].i;
                 temp.j = V[binary_size].j;
                 temp.value = V[binary_size].value;
-                //qDebug()<<"DODAŁEM: "<<temp.i<<" "<<temp.j<<" z val: "<<temp.value;
                 output.append(temp);
             }
         }
-        //qDebug()<<"END";
     }
 
     int sum = 0, _i, _j;
 
-
+    //pętla zwracająca wartość poszczególnych pixeli
     for(int x = 0; x < output.size(); x++)
     {
         _i = output[x].i;
         _j = output[x].j;
-        /*
-        if(_i < 0 || _i >= r || _j < 0 || _j >= s)
-            sum += 0;
-        else
-            sum += Ctime[_i][_j].status;
-            */
-        sum += Ctime[(r+(_i%r))%r][(s+(_j%s))%s].status;
-
+        sum += Ctime[(r+(_i%r))%r][(s+(_j%s))%s].red;
     }
-    //qDebug()<<"Ile razy?: "<<kk<<rulenum<<output.size();
-    //qDebug()<<"total sum: "<<sum;
+
     return sum;
 }
 
-int Encrypter::transitionFunction(int rulenum, QList<LOCAL> V, Matrix **Ctime)
+/*
+int* Encrypter::localTransitionColor(int rulenum, QList<LOCAL> V, Matrix** Ctime)
 {
-    int sum = 0, _i, _j;
-    QList<LOCAL> output;
-    //Matrix **current = C.last();
-    //Matrix **current = Ctime;
-    //std::reverse(V.begin(), V.end());
-    for(int x = 0; x< V.size(); x++)
+    int binary_rulenum[9] = {0}; //binarna postać liczby rządzącej
+    int binary_size;    //wielkość
+    int decimal = 0;    //zmienna pomocnicza
+    int _rulenum = rulenum; //zmienna pomocnicza
+    QList<LOCAL> output; //zwracana lista pixeli sąsiadujących
+    LOCAL temp; //zmienna pomocnicza
+
+    std::reverse(V.begin(), V.end());
+
+    //przekształcenie wartości reguły na postać binarną
+    for(binary_size = 0; _rulenum > 0; binary_size++)
     {
-        if(V[x].value > 0)
+        binary_rulenum[binary_size]=_rulenum%2;
+        _rulenum = _rulenum/2;
+    }
+
+    //pętla sprawdzająca poszczególne wartości kolejnych bitów
+    for(binary_size = binary_size - 1; binary_size >= 0; binary_size--)
+    {
+        if(binary_rulenum[binary_size]==1)
         {
-            _i = V[x].i;
-            _j = V[x].j;
-            sum += Ctime[_i][_j].status;
+            decimal = int(pow(2.0, binary_size));
+            if(decimal <= rulenum)
+            {
+                temp.i = V[binary_size].i;
+                temp.j = V[binary_size].j;
+                temp.value = V[binary_size].value;
+                output.append(temp);
+            }
         }
     }
-    return sum^rulenum;
-    //return rulenum^sum;
 
-}
-/*
-int Encrypter::transitionFunction(int rulenum, QList<std::pair<int,int>> V, Matrix **Ctime)
-{
-    int sum=0;
-    int tmp1, tmp2;
-    //Matrix **current = C.last();
-    Matrix **current = Ctime;
-    for(int i=0; i< V.size(); i++)
+    int *sum = new int[3];
+    int _i, _j;
+
+    std::fill_n(sum, 3, 0);
+
+    //pętla zwracająca wartość poszczególnych pixeli
+    for(int x = 0; x < output.size(); x++)
     {
-        tmp1 = V[i].first;
-        tmp2 = V[i].second;
-        sum += current[tmp1][tmp2].status;
+        _i = output[x].i;
+        _j = output[x].j;
+        sum[0] += Ctime[(r+(_i%r))%r][(s+(_j%s))%s].value.R;
+        sum[1] += Ctime[(r+(_i%r))%r][(s+(_j%s))%s].value.G;
+        sum[2] += Ctime[(r+(_i%r))%r][(s+(_j%s))%s].value.B;
     }
-    return sum^rulenum;
+
+    return sum;
 }
 */
+Matrix Encrypter::localTransitionColor(int rulenum, QList<LOCAL> V, Matrix** Ctime)
+{
+    int binary_rulenum[9] = {0}; //binarna postać liczby rządzącej
+    int binary_size;    //wielkość
+    int decimal = 0;    //zmienna pomocnicza
+    int _rulenum = rulenum; //zmienna pomocnicza
+    QList<LOCAL> output; //zwracana lista pixeli sąsiadujących
+    LOCAL temp; //zmienna pomocnicza
+
+    std::reverse(V.begin(), V.end());
+
+    //przekształcenie wartości reguły na postać binarną
+    for(binary_size = 0; _rulenum > 0; binary_size++)
+    {
+        binary_rulenum[binary_size]=_rulenum%2;
+        _rulenum = _rulenum/2;
+    }
+
+    //pętla sprawdzająca poszczególne wartości kolejnych bitów
+    for(binary_size = binary_size - 1; binary_size >= 0; binary_size--)
+    {
+        if(binary_rulenum[binary_size]==1)
+        {
+            decimal = int(pow(2.0, binary_size));
+            if(decimal <= rulenum)
+            {
+                temp.i = V[binary_size].i;
+                temp.j = V[binary_size].j;
+                temp.value = V[binary_size].value;
+                output.append(temp);
+            }
+        }
+    }
+
+    Matrix sum;
+    int _i, _j;
+
+    //pętla zwracająca wartość poszczególnych pixeli
+    for(int x = 0; x < output.size(); x++)
+    {
+        _i = output[x].i;
+        _j = output[x].j;
+        sum.red += Ctime[(r+(_i%r))%r][(s+(_j%s))%s].red;
+        sum.green += Ctime[(r+(_i%r))%r][(s+(_j%s))%s].green;
+        sum.blue += Ctime[(r+(_i%r))%r][(s+(_j%s))%s].blue;
+    }
+
+    return sum;
+}
 
 
 void Encrypter::initCtresholds(int k, int c)
@@ -302,10 +415,26 @@ void Encrypter::initCtresholds(int k, int c)
         {
             for(int j=0; j<s; j++)
             {
-                //qsrand(qrand());
-                //std::srand(time(NULL));
-                //temp[i][j].status = std::rand()%c; //qrand()%c;
-                temp[i][j].status = QRandomGenerator::global()->bounded(c);
+                switch(type)
+                {
+                case IMAGETYPE::BINARY:
+                {
+                    break;
+                }
+                case IMAGETYPE::GREY:
+                {
+                   temp[i][j].red = QRandomGenerator::global()->bounded(c);
+                   break;
+                }
+                case IMAGETYPE::COLOR:
+                {
+                    temp[i][j].red = QRandomGenerator::global()->bounded(c);
+                    temp[i][j].green = QRandomGenerator::global()->bounded(c);
+                    temp[i][j].blue = QRandomGenerator::global()->bounded(c);
+                    break;
+                }
+                }
+
             }
         }
         C.append(temp);
@@ -320,26 +449,35 @@ void Encrypter::saveCImages()
     for(int x=0; x<C.size(); x++)
     {
         QImage output(image);
-        QRgb value;
+        QRgb value = qRgb(0,0,0);
         Matrix **temp = C[x];
         for(int i=0; i<r; i++)
         {
             for(int j=0; j<s; j++)
             {
-                if(type==IMAGETYPE::COLOR)
+                switch(type)
                 {
-                    value = qRgb(0,0,0); //temporary value for color images
+                case IMAGETYPE::COLOR:
+                {
+                    value = qRgb(temp[i][j].red, temp[i][j].green, temp[i][j].blue);
+                    break;
                 }
-                else
+                case IMAGETYPE::GREY:
                 {
-                    value = qRgb(temp[i][j].status, temp[i][j].status, temp[i][j].status);
+                    value = qRgb(temp[i][j].red, temp[i][j].red, temp[i][j].red);
+                    break;
+                }
+                case IMAGETYPE::BINARY:
+                {
+                    break;
+                }
                 }
                 output.setPixel(i,j,value);
             }
         }
-        if(x==0)        output.save(output_path+QObject::tr("/oryginalny_plik.png"), "PNG");
+        if(x==0)      output.save(output_path+QObject::tr("/oryginalny_plik.png"), "PNG");
         else if(x<k)  output.save(output_path+QObject::tr("/C_setup_%1.png").arg(x), "PNG");
-        else            output.save(output_path+QObject::tr("/C%1.png").arg(x-k), "PNG");
+        else          output.save(output_path+QObject::tr("/C%1.png").arg(x-k), "PNG");
     }
 
     WindowOutput &window = *new WindowOutput;
@@ -347,9 +485,11 @@ void Encrypter::saveCImages()
     window.passItemList(QObject::tr("Parametr m: %1").arg(m));
     window.passItemList(QObject::tr("Liczba utworzonych sekretów: %1").arg(n));
     window.passItemList(QObject::tr("Sekrety: "));
-    for(int i=k; i<C.size(); i++) window.passItemList(QObject::tr("C%1.png").arg(i-k));
+    for(int i=k; i<C.size(); i++)
+        window.passItemList(QObject::tr("C%1.png").arg(i-k));
     window.passItemList(QObject::tr("Liczby rządzące: "));
-    for(int i=0; i<k-1; i++) window.passItemList(QObject::tr("%1").arg(rulenum[i]));
+    for(int i=0; i<k-1; i++)
+        window.passItemList(QObject::tr("%1").arg(rulenum[i]));
     window.show();
 }
 
@@ -363,23 +503,7 @@ Matrix** Encrypter::newMatrix()
     return new_matrix;
 }
 
-QList<std::pair<int,int>> Encrypter::getLocals(int i, int j)
-{
-    QList<std::pair<int,int>> V;
-    if(i-1 >= 0 && j-1 >= 0) V.append(std::make_pair(i-1,j-1));
-    if(i-1 >= 0)             V.append(std::make_pair(i-1,j));
-    if(i-1 >= 0 && j+1 < s)  V.append(std::make_pair(i-1,j+1));
-    if(j-1 >= 0)             V.append(std::make_pair(i,j-1));
-    V.append(std::make_pair(i,j));
-    if(j+1 < s)              V.append(std::make_pair(i,j+1));
-    if(i+1 < r && j-1 >= 0)  V.append(std::make_pair(i+1,j-1));
-    if(i+1 < r)              V.append(std::make_pair(i+1,j));
-    if(i+1 < r && j+1 < s)   V.append(std::make_pair(i+1,j+1));
-
-    return V;
-}
-
-QList<LOCAL> Encrypter::getLocalss(int i, int j)
+QList<LOCAL> Encrypter::getLocals(int i, int j)
 {
     QList<LOCAL> list;
     LOCAL local;
