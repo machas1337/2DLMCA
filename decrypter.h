@@ -7,7 +7,7 @@
 #include <QObject>
 #include <QtGlobal>
 #include <math.h>
-#include <matrix.h>
+#include <pixel.h>
 #include "mainwindow.h"
 #include "windowoutput.h"
 #include "encrypter.h"
@@ -24,10 +24,10 @@ public:
 
     QImage decrypt();//główna funkcja deszyfrująca
     int inverseTransition(int i, int j); //funkcja obecnego stanu inwersji
-    Matrix inverseTransitionColor(int i, int j); //funkcja obecnego stanu inwersji
+    Pixel inverseTransitionColor(int i, int j); //funkcja obecnego stanu inwersji
 
-    Matrix** convertToMatrix(QImage image);
-    QImage convertToQImage(Matrix **image);
+    Pixel** convertToPixel(QImage image);
+    QImage convertToQImage(Pixel **image);
 };
 
 #endif // DECRYPTER_H

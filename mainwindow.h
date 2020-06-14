@@ -14,8 +14,7 @@
 
 enum IMAGETYPE{
     COLOR,
-    GREY,
-    BINARY
+    GREY
 };
 
 namespace Ui {

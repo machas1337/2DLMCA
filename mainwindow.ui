@@ -114,7 +114,7 @@
       <x>400</x>
       <y>140</y>
       <width>120</width>
-      <height>80</height>
+      <height>61</height>
      </rect>
     </property>
     <property name="title">
@@ -144,19 +144,6 @@
      </property>
      <property name="text">
       <string>szary</string>
-     </property>
-    </widget>
-    <widget class="QRadioButton" name="radioImageBinary">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>50</y>
-       <width>82</width>
-       <height>17</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>binarny</string>
      </property>
     </widget>
    </widget>

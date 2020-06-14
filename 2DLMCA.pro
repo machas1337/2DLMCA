@@ -16,14 +16,14 @@ SOURCES += main.cpp\
     decrypter.cpp \
         mainwindow.cpp \
     encrypter.cpp \
-    matrix.cpp \
+    pixel.cpp \
     windowdecryptor.cpp \
     windowoutput.cpp
 
 HEADERS  += mainwindow.h \
     decrypter.h \
     encrypter.h \
-    matrix.h \
+    pixel.h \
     windowdecryptor.h \
     windowoutput.h
 

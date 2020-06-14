@@ -1,13 +1,13 @@
-#include "matrix.h"
+#include "pixel.h"
 
-Matrix::Matrix()
+Pixel::Pixel()
 {
     red = 0;
     green = 0;
     blue = 0;
 }
 
-Matrix& Matrix::operator=(Matrix tmp)
+Pixel& Pixel::operator=(Pixel tmp)
 {
     this->red = tmp.red;
     this->green = tmp.green;
@@ -15,7 +15,7 @@ Matrix& Matrix::operator=(Matrix tmp)
     return *this;
 }
 
-Matrix& Matrix::operator+=(Matrix sum)
+Pixel& Pixel::operator+=(Pixel sum)
 {
     this->red += sum.red;
     this->green += sum.green;
@@ -23,7 +23,7 @@ Matrix& Matrix::operator+=(Matrix sum)
     return *this;
 }
 
-Matrix& Matrix::operator-=(Matrix sum)
+Pixel& Pixel::operator-=(Pixel sum)
 {
     this->red -= sum.red;
     this->green -= sum.green;

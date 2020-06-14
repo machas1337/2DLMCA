@@ -29,8 +29,6 @@ IMAGETYPE MainWindow::setImageType()
         return IMAGETYPE::COLOR;
     else if(ui->radioImageGrey->isChecked()==true)
         return IMAGETYPE::GREY;
-    else if(ui->radioImageBinary->isChecked()==true)
-        return IMAGETYPE::BINARY;
     else
         throw "BŁĄD TYPU OBRAZKA";
 }

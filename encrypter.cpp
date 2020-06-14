@@ -40,27 +40,12 @@ void Encrypter::loadFile(QImage img)
     s= image.size().rheight();
 
     //utworzenie matriksa dla obrazu
-    M= new Matrix *[r];
+    M= new Pixel *[r];
     for(int i= 0; i<r; i++)
     {
-        M[i]= new Matrix[s];
+        M[i]= new Pixel[s];
     }
-    //Cnext = M;
     t++;
-}
-
-void Encrypter::createMBandW()
-{
-    for(int i= 0; i< r; i++)
-    {
-        for(int j= 0; j<s; j++)
-        {
-           if(image.pixel(i,j)== qRgb(0,0,0))
-               M[i][j].red = 1;
-           else
-               M[i][j].red = 0;
-        }
-    }
 }
 
 void Encrypter::createMGrey()
@@ -83,13 +68,10 @@ void Encrypter::createMColor()
     {
         for(int j= 0; j<s; j++)
         {
-           //tmp = M[i][j].fromRgb(image.pixel(i,j));
            tmp.setRgb(image.pixel(i,j));
            M[i][j].red = tmp.red();
            M[i][j].green = tmp.green();
            M[i][j].blue = tmp.blue();
-           if(i == 0 && j == 0)
-               qDebug()<<"output: "<<M[i][j].red<<M[i][j].green<<M[i][j].blue;
         }
     }
 
@@ -97,19 +79,22 @@ void Encrypter::createMColor()
 
 void Encrypter::kindOfImage(IMAGETYPE typee)
 {
-    if(typee==IMAGETYPE::GREY){
-        b= 8;
-        createMGrey();
-    }
-    else if(typee==IMAGETYPE::BINARY){
-        b= 1;
-        createMBandW();
-    }
-    else{
-        b= 8; //8 bit to maksymalna reprezentacja barw w przestrzeni RGB
-        createMColor();
-    }
+    b = 8;
     type = typee;
+    switch(type)
+    {
+    case IMAGETYPE::GREY:
+    {
+        createMGrey();
+        break;
+    }
+    case IMAGETYPE::COLOR:
+    {
+        createMColor();
+        break;
+    }
+    }
+
     C.append(M); //pierwszy szyfrogram sekretu C(0)
 }
 
@@ -142,10 +127,6 @@ void Encrypter::encrypt(int k, IMAGETYPE typeTMP)
             {
                 switch(type)
                 {
-                    case IMAGETYPE::BINARY:
-                    {
-                        break;
-                    }
                     case IMAGETYPE::GREY:
                     {
                         Cnext[i][j].red = transitionGrey(i,j);
@@ -153,11 +134,7 @@ void Encrypter::encrypt(int k, IMAGETYPE typeTMP)
                     }
                     case IMAGETYPE::COLOR:
                     {
-                        //int *result = transitionColor(i,j);
-                        //Matrix result = transitionColor(i,j);
                         Cnext[i][j] = transitionColor(i,j);
-                        //Cnext[i][j].green = result.value.G;
-                        //Cnext[i][j].blue = result.value.B;
                         break;
                     }
                 }
@@ -192,44 +169,10 @@ int Encrypter::transitionGrey(int i, int j)
 
     return a;
 }
-/*
-int* Encrypter::transitionColor(int i, int j)
+
+Pixel Encrypter::transitionColor(int i, int j)
 {
-    int *a = new int[3];
-    std::fill_n(a, 3, 0);
-
-    int *current_tmp;
-    QList<LOCAL> V = getLocals(i, j);
-
-    a[0] = C.at(C.size()-k)[i][j].value.R;
-    a[1] = C.at(C.size()-k)[j][j].value.G;
-    a[2] = C.at(C.size()-k)[j][j].value.B;
-
-    for(int x = C.size()-k+1; x < C.size(); x++)
-    {
-        current_tmp = localTransitionColor(rulenum[rulenum_count], V, C.at(x));
-        a[0] += current_tmp[0];
-        a[1] += current_tmp[1];
-        a[2] += current_tmp[2];
-        if(rulenum_count == k - 2){
-            rulenum_count = 0;
-        }
-        else{
-            rulenum_count++;
-        }
-    }
-
-    a[0] = (c+(a[0] % c))%c;
-    a[1] = (c+(a[1] % c))%c;
-    a[2] = (c+(a[2] % c))%c;
-
-    return a;
-}
-*/
-
-Matrix Encrypter::transitionColor(int i, int j)
-{
-    Matrix a;
+    Pixel a;
     QList<LOCAL> V = getLocals(i, j);
 
     a = C.at(C.size()-k)[i][j];
@@ -252,7 +195,7 @@ Matrix Encrypter::transitionColor(int i, int j)
 }
 
 
-int Encrypter::localTransition(int rulenum, QList<LOCAL> V, Matrix** Ctime)
+int Encrypter::localTransition(int rulenum, QList<LOCAL> V, Pixel** Ctime)
 {
     int binary_rulenum[9] = {0}; //binarna postać liczby rządzącej
     int binary_size;    //wielkość
@@ -280,7 +223,6 @@ int Encrypter::localTransition(int rulenum, QList<LOCAL> V, Matrix** Ctime)
             {
                 temp.i = V[binary_size].i;
                 temp.j = V[binary_size].j;
-                temp.value = V[binary_size].value;
                 output.append(temp);
             }
         }
@@ -299,8 +241,8 @@ int Encrypter::localTransition(int rulenum, QList<LOCAL> V, Matrix** Ctime)
     return sum;
 }
 
-/*
-int* Encrypter::localTransitionColor(int rulenum, QList<LOCAL> V, Matrix** Ctime)
+
+Pixel Encrypter::localTransitionColor(int rulenum, QList<LOCAL> V, Pixel** Ctime)
 {
     int binary_rulenum[9] = {0}; //binarna postać liczby rządzącej
     int binary_size;    //wielkość
@@ -328,65 +270,12 @@ int* Encrypter::localTransitionColor(int rulenum, QList<LOCAL> V, Matrix** Ctime
             {
                 temp.i = V[binary_size].i;
                 temp.j = V[binary_size].j;
-                temp.value = V[binary_size].value;
                 output.append(temp);
             }
         }
     }
 
-    int *sum = new int[3];
-    int _i, _j;
-
-    std::fill_n(sum, 3, 0);
-
-    //pętla zwracająca wartość poszczególnych pixeli
-    for(int x = 0; x < output.size(); x++)
-    {
-        _i = output[x].i;
-        _j = output[x].j;
-        sum[0] += Ctime[(r+(_i%r))%r][(s+(_j%s))%s].value.R;
-        sum[1] += Ctime[(r+(_i%r))%r][(s+(_j%s))%s].value.G;
-        sum[2] += Ctime[(r+(_i%r))%r][(s+(_j%s))%s].value.B;
-    }
-
-    return sum;
-}
-*/
-Matrix Encrypter::localTransitionColor(int rulenum, QList<LOCAL> V, Matrix** Ctime)
-{
-    int binary_rulenum[9] = {0}; //binarna postać liczby rządzącej
-    int binary_size;    //wielkość
-    int decimal = 0;    //zmienna pomocnicza
-    int _rulenum = rulenum; //zmienna pomocnicza
-    QList<LOCAL> output; //zwracana lista pixeli sąsiadujących
-    LOCAL temp; //zmienna pomocnicza
-
-    std::reverse(V.begin(), V.end());
-
-    //przekształcenie wartości reguły na postać binarną
-    for(binary_size = 0; _rulenum > 0; binary_size++)
-    {
-        binary_rulenum[binary_size]=_rulenum%2;
-        _rulenum = _rulenum/2;
-    }
-
-    //pętla sprawdzająca poszczególne wartości kolejnych bitów
-    for(binary_size = binary_size - 1; binary_size >= 0; binary_size--)
-    {
-        if(binary_rulenum[binary_size]==1)
-        {
-            decimal = int(pow(2.0, binary_size));
-            if(decimal <= rulenum)
-            {
-                temp.i = V[binary_size].i;
-                temp.j = V[binary_size].j;
-                temp.value = V[binary_size].value;
-                output.append(temp);
-            }
-        }
-    }
-
-    Matrix sum;
+    Pixel sum;
     int _i, _j;
 
     //pętla zwracająca wartość poszczególnych pixeli
@@ -406,7 +295,7 @@ Matrix Encrypter::localTransitionColor(int rulenum, QList<LOCAL> V, Matrix** Cti
 void Encrypter::initCtresholds(int k, int c)
 {
     k--;
-    Matrix **temp;
+    Pixel **temp;
 
     for(int x=0; x<k; x++)
     {
@@ -417,10 +306,6 @@ void Encrypter::initCtresholds(int k, int c)
             {
                 switch(type)
                 {
-                case IMAGETYPE::BINARY:
-                {
-                    break;
-                }
                 case IMAGETYPE::GREY:
                 {
                    temp[i][j].red = QRandomGenerator::global()->bounded(c);
@@ -450,7 +335,7 @@ void Encrypter::saveCImages()
     {
         QImage output(image);
         QRgb value = qRgb(0,0,0);
-        Matrix **temp = C[x];
+        Pixel **temp = C[x];
         for(int i=0; i<r; i++)
         {
             for(int j=0; j<s; j++)
@@ -465,10 +350,6 @@ void Encrypter::saveCImages()
                 case IMAGETYPE::GREY:
                 {
                     value = qRgb(temp[i][j].red, temp[i][j].red, temp[i][j].red);
-                    break;
-                }
-                case IMAGETYPE::BINARY:
-                {
                     break;
                 }
                 }
@@ -493,14 +374,14 @@ void Encrypter::saveCImages()
     window.show();
 }
 
-Matrix** Encrypter::newMatrix()
+Pixel** Encrypter::newMatrix()
 {
-    Matrix **new_matrix= new Matrix *[r];
+    Pixel **new_Pixel= new Pixel *[r];
     for(int i= 0; i<r; i++)
     {
-        new_matrix[i]= new Matrix[s];
+        new_Pixel[i]= new Pixel[s];
     }
-    return new_matrix;
+    return new_Pixel;
 }
 
 QList<LOCAL> Encrypter::getLocals(int i, int j)
@@ -510,63 +391,38 @@ QList<LOCAL> Encrypter::getLocals(int i, int j)
 
     local.i = i-1;
     local.j = j-1;
-    if(i-1 >= 0 && j-1 >= 0)
-    { local.value = 1;
-    } else { local.value = 0; }
     list.append(local);
 
     local.i = i-1;
     local.j = j;
-    if(i-1 >= 0)
-    { local.value = 1;
-    } else { local.value = 0; }
     list.append(local);
 
     local.i = i-1;
     local.j = j+1;
-    if(i-1 >= 0 && j+1 < s)
-    { local.value = 1;
-    } else { local.value = 0; }
     list.append(local);
 
     local.i = i;
     local.j = j-1;
-    if(j-1 >= 0)
-    { local.value = 1;
-    } else { local.value = 0; }
     list.append(local);
 
     local.i = i;
     local.j = j;
-    local.value = 1;
     list.append(local);
 
     local.i = i;
     local.j = j+1;
-    if(j+1 < s)
-    { local.value = 1;
-    } else { local.value = 0; }
     list.append(local);
 
     local.i = i+1;
     local.j = j-1;
-    if(i+1 < r && j-1 >= 0)
-    { local.value = 1;
-    } else { local.value = 0; }
     list.append(local);
 
     local.i = i+1;
     local.j = j;
-    if(i+1 < r)
-    { local.value = 1;
-    } else { local.value = 0; }
     list.append(local);
 
     local.i = i+1;
     local.j = j+1;
-    if(i+1 < r && j+1 < s)
-    { local.value = 1;
-    } else { local.value = 0; }
     list.append(local);
 
     return list;

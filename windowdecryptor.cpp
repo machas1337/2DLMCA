@@ -1,6 +1,8 @@
 #include "windowdecryptor.h"
 #include "ui_windowdecryptor.h"
 #include <QDebug>
+#include <QRegularExpression>
+#include <QRegularExpressionMatch>
 
 WindowDecryptor::WindowDecryptor(QWidget *parent) :
     QDialog(parent),
@@ -18,14 +20,21 @@ WindowDecryptor::WindowDecryptor(QStringList images, IMAGETYPE type) :
     ui(new Ui::WindowDecryptor)
 {
     ui->setupUi(this);
-    for(int i=0; i<images.size(); i++) ui->textBrowser->append(images[i]);
+    for(int i=0; i<images.size(); i++)
+    {
+        QString current = images[i];
+        QRegularExpression expresion("([^\//]+$)");
+        QRegularExpressionMatch match = expresion.match(current);
+        if(match.hasMatch() == true)
+        {
+            current = match.captured(0);
+        }
+
+        ui->textBrowser->append(current);
+    }
     this->images = images;
     this->type = type;
     clicked_decrypting = 0;
-    for(QString xx : images)
-    {
-        qDebug()<<xx;
-    }
 }
 
 void WindowDecryptor::on_pushButton_clicked()
@@ -68,7 +77,8 @@ void WindowDecryptor::on_pushButtonDecode_clicked()
         dec = new Decrypter(outputImages(), rulenum, rulenum_list.size(), type);
     }
     clicked_decrypting++;
-
+    ui->iterationLabel->setText(tr("Iteracja: %1").arg(clicked_decrypting));
+    
     QImage output = dec->decrypt();
     scene= new QGraphicsScene(ui->graphicsView);
     ui->graphicsView->setScene(scene);

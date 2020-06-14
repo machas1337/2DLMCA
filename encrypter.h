@@ -7,7 +7,7 @@
 #include <QObject>
 #include <QtGlobal>
 #include <math.h>
-#include <matrix.h>
+#include <pixel.h>
 #include "mainwindow.h"
 #include "windowoutput.h"
 
@@ -16,16 +16,15 @@ struct LOCAL
 {
     int i;
     int j;
-    int value;
 };
 
 class Encrypter
 {
 public:
     QImage image; //obraz oryginalny
-    Matrix **M; //przedstawienie oryginalnego obrazu jako tablicy
-    Matrix **Cnext; //Tworzenie nowego obrazu C
-    QList<Matrix **>  C; //Obrazy C
+    Pixel **M; //przedstawienie oryginalnego obrazu jako tablicy
+    Pixel **Cnext; //Tworzenie nowego obrazu C
+    QList<Pixel **>  C; //Obrazy C
     int k; //liczba "rządząca"
     int m; //parametr m
     int n; //liczba utworzonych sekretów
@@ -47,12 +46,11 @@ public:
     void encrypt(int k, IMAGETYPE type); //główny kod procesu kodowania
 
     int transitionGrey(int i, int j); //wykonanie przekształcenia
-    Matrix transitionColor(int i, int j); //wykonanie przekształcenia dla obrazów kolorowych
+    Pixel transitionColor(int i, int j); //wykonanie przekształcenia dla obrazów kolorowych
 
-    int localTransition(int rulenum, QList<LOCAL> V, Matrix** Ctime); //lokalna funkcja przekształcenia
-    Matrix localTransitionColor(int rulenum, QList<LOCAL> V, Matrix** Ctime);
+    int localTransition(int rulenum, QList<LOCAL> V, Pixel** Ctime); //lokalna funkcja przekształcenia
+    Pixel localTransitionColor(int rulenum, QList<LOCAL> V, Pixel** Ctime);
 
-    void createMBandW(); //utwrzoenie M tablicy dla obrazów czarno białych
     void createMGrey(); //utwozenie M tablicy dla obrazów szarych
     void createMColor(); //utworzenie M tablicy dla obrazów kolorwych
 
@@ -61,7 +59,7 @@ public:
     QList<LOCAL> getLocals(int i, int j); //funkcja zwraca sąsiadów punktu <i,j> wg. definicji Moor'a
 
     void saveCImages();
-    Matrix** newMatrix();
+    Pixel** newMatrix();
 };
 
 
