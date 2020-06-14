@@ -6,6 +6,7 @@ WindowOutput::WindowOutput(QWidget *parent) :
     ui(new Ui::WindowOutput)
 {
     ui->setupUi(this);
+    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 }
 
 WindowOutput::~WindowOutput()

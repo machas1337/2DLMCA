@@ -356,9 +356,8 @@ void Encrypter::saveCImages()
                 output.setPixel(i,j,value);
             }
         }
-        if(x==0)      output.save(output_path+QObject::tr("/oryginalny_plik.png"), "PNG");
-        else if(x<k)  output.save(output_path+QObject::tr("/C_setup_%1.png").arg(x), "PNG");
-        else          output.save(output_path+QObject::tr("/C%1.png").arg(x-k), "PNG");
+        if(x>=k)
+            output.save(output_path+QObject::tr("/C%1.png").arg(x-k), "PNG");
     }
 
     WindowOutput &window = *new WindowOutput;

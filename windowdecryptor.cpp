@@ -9,6 +9,7 @@ WindowDecryptor::WindowDecryptor(QWidget *parent) :
     ui(new Ui::WindowDecryptor)
 {
     ui->setupUi(this);
+    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 }
 
 WindowDecryptor::~WindowDecryptor()
@@ -35,6 +36,8 @@ WindowDecryptor::WindowDecryptor(QStringList images, IMAGETYPE type) :
     this->images = images;
     this->type = type;
     clicked_decrypting = 0;
+
+    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 }
 
 void WindowDecryptor::on_pushButton_clicked()
@@ -80,6 +83,7 @@ void WindowDecryptor::on_pushButtonDecode_clicked()
     ui->iterationLabel->setText(tr("Iteracja: %1").arg(clicked_decrypting));
     
     QImage output = dec->decrypt();
+    output_image = output;
     scene= new QGraphicsScene(ui->graphicsView);
     ui->graphicsView->setScene(scene);
     QGraphicsPixmapItem *tmpimg = new QGraphicsPixmapItem(QPixmap::fromImage(output));
@@ -87,4 +91,14 @@ void WindowDecryptor::on_pushButtonDecode_clicked()
     ui->graphicsView->fitInView((scene->sceneRect()), Qt::KeepAspectRatio);
     scene->update();
     ui->graphicsView->show();
+
+    if(!output_image.isNull())
+        ui->pushButtonSave->setEnabled(true);
+}
+
+void WindowDecryptor::on_pushButtonSave_clicked()
+{
+    QString link = QFileDialog::getSaveFileName(this, tr("Zapisz plik obrazu"), "", tr("Pliki obrazów (*.png)"));
+    if(!link.isEmpty())
+        output_image.save(link, "PNG");
 }

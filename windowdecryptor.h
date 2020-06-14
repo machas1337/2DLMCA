@@ -19,6 +19,7 @@ public:
     int clicked_decrypting;
     QStringList images;
     QGraphicsScene *scene;
+    QImage output_image;
     IMAGETYPE type;
     explicit WindowDecryptor(QWidget *parent = nullptr);
     explicit WindowDecryptor(QStringList images, IMAGETYPE type);
@@ -28,6 +29,7 @@ public:
 private slots:
     void on_pushButton_clicked();
     void on_pushButtonDecode_clicked();
+    void on_pushButtonSave_clicked();
 
 private:
     Ui::WindowDecryptor *ui;
